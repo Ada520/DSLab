@@ -85,4 +85,4 @@ def gengram_sentence(corpus, N=3, sentence_count=5, start_seq=None):
 
 if __name__ == "__main__":
     corpus = preprocess_corpus("concatTXT.txt")
-    print gengram_sentence(corpus)
+    print gengram_sentence(corpus, start_seq = "Our enumeration")
