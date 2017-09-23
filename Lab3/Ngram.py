@@ -11,21 +11,21 @@ def make_ngrams(tokens, N):
     return ngrams
 
 
-def ngram_freqs(ngrams):
-    """ Builds dict of TOKEN_SEQUENCEs and NEXT_TOKEN frequencies """
-
+# Extracs necessary data from our preprocessed string
+# Relative frequency is not taken into account given we are using a trigram
+# model on a research paper
+# Returns dict of dict named counts
+# where counts[a][b] = p(b follows a | a)
+def get_ngram_data(ngrams):
     counts = {}
 
-    # Using example of ngram "a b c e" ...
     for ngram in ngrams:
-        token_seq  = SEP.join(ngram[:-1])   # "a b c"
-        last_token = ngram[-1]              # "e"
+        token_seq  = SEP.join(ngram[:-1])
+        last_token = ngram[-1]
 
-        # create empty {NEXT_TOKEN : COUNT} dict if token_seq not seen before
         if token_seq not in counts:
             counts[token_seq] = {};
 
-        # initialize count for newly seen next_tokens
         if last_token not in counts[token_seq]:
             counts[token_seq][last_token] = 0;
 
@@ -40,7 +40,6 @@ def next_word(text, N, counts):
     token_seq = SEP.join(text.split()[-(N-1):]);
     choices = counts[token_seq].items();
 
-    # make a weighted choice for the next_token
     # [see http://stackoverflow.com/a/3679747/2023516]
     total = sum(weight for choice, weight in choices)
     r = random.uniform(0, total)
@@ -56,10 +55,7 @@ def preprocess_corpus(filename):
     s = re.sub('[()]', r'', s)                              # remove certain punctuation chars
     s = re.sub('([.-])+', r'\1', s)                         # collapse multiples of certain chars
     s = re.sub('([^0-9])([.,!?])([^0-9])', r'\1 \2 \3', s)  # pad sentence punctuation chars with whitespace
-    s = re.sub(r"\\\w+", "", s)                             # removes latex that begins with backslashes
-    s = re.sub(r'\d+', '', s)                               # remove digits
     s = ' '.join(s.split()).lower()                         # remove extra whitespace (incl. newlines)
-
     return s;
 
 
@@ -70,10 +66,11 @@ def postprocess_output(s):
     return s
 
 
-def gengram_sentence(corpus, N=4, sentence_count=5, start_seq=None):
+def gengram_sentence(corpus, N=3, sentence_count=5, start_seq=None):
     """ Generate a random sentence based on input text corpus """
+
     ngrams = make_ngrams(corpus.split(SEP), N)
-    counts = ngram_freqs(ngrams)
+    counts = get_ngram_data(ngrams)
 
     if start_seq is None: start_seq = random.choice(counts.keys());
     rand_text = start_seq.lower();
@@ -85,7 +82,7 @@ def gengram_sentence(corpus, N=4, sentence_count=5, start_seq=None):
 
     return postprocess_output(rand_text);
 
-if __name__ == "__main__":
 
+if __name__ == "__main__":
     corpus = preprocess_corpus("concatTXT.txt")
     print gengram_sentence(corpus)
